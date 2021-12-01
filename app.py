@@ -4,14 +4,49 @@ from flask import abort
 from flask import make_response
 from flask import url_for
 from flask import request
+from flask import render_template
+from flask import redirect
+from flask import session
 from time import gmtime
 from time import strftime
 import json
 import sqlite3
+import datetime
+from flask_cors import CORS, cross_origin
 
 
 app = Flask(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR']= False
+CORS(app)
+app.secret_key = 'key'
+@app.route('/clear')
+def clearsession():
+ # Clear the session
+ session.clear()
+ # Redirect the user to the main page
+ return redirect(url_for('main'))
+
+@app.route('/addname')
+def addname():
+ if request.args.get('yourname'):
+  session['name'] = request.args.get('yourname')
+  # And then redirect the user to the main page
+  return redirect(url_for('main'))
+ else:
+  return render_template('addname.html', session=session)
+
+@app.route('/')
+def main():
+ return render_template('main.html')
+
+@app.route('/addtweets')
+def addtweetjs():
+ return render_template('addtweets.html')
+ 
+@app.route('/adduser')
+def adduser():
+    return render_template('adduser.html')
+
 @app.route('/api/v2/tweets/<int:id>', methods=['GET'])
 def get_tweet(id):
     return list_tweet(id)
@@ -239,7 +274,6 @@ def home_index():
         api_list.append(a_dict)
         conn.close()
         return jsonify({'api_version': api_list}), 200
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
